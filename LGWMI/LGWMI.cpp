@@ -101,7 +101,7 @@ int LGWMI::lg_wmbb(uint32_t method_id, uint32_t arg1, uint32_t arg2) {
 }
 
 void LGWMI::setBatteryConservativeMode(bool state) {
-    if (lg_wmab(WM_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
+    if (lg_wmbb(WMBB_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
         SYSLOG("batt", "Failed to %s battery conservative mode", state ? "enable" : "disable");
     } else {
         DBGLOG("batt", "Battery conservative mode is %s", state ? "enabled" : "disabled");

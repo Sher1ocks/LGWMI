@@ -16,6 +16,7 @@
 #define WM_BATT_LIMIT   0x61
 #define WM_FN_LOCK      0x407
 #define WMBB_USB_CHARGE 0x10B
+#define WMBB_BATT_LIMIT 0x10C
 
 class LGWMI : public IOService {
     OSDeclareDefaultStructors(LGWMI)

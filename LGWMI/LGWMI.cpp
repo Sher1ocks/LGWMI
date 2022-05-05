@@ -6,6 +6,7 @@
 //
 
 #include "LGWMI.hpp"
+#include <Headers/kern_devinfo.hpp>
 
 bool ADDPR(debugEnabled) = false;
 uint32_t ADDPR(debugPrintDelay) = 0;
@@ -100,12 +101,36 @@ int LGWMI::lg_wmbb(uint32_t method_id, uint32_t arg1, uint32_t arg2) {
     return val;
 }
 
+// Since the LG Gram 2019 and later models can control the maximum battery charge using WMBB,
+// you must use smbios on MacBook Pro 14,x, MacBook Air 8,x or later.
+// REF : https://github.com/torvalds/linux/blob/master/drivers/platform/x86/lg-laptop.c
 void LGWMI::setBatteryConservativeMode(bool state) {
-    if (lg_wmbb(WMBB_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
-        SYSLOG("batt", "Failed to %s battery conservative mode", state ? "enable" : "disable");
+    auto deviceInfo = BaseDeviceInfo::get();
+    
+    DBGLOG("batt", "Detected %s model", deviceInfo.modelIdentifier);
+    
+    if (strstr(deviceInfo.modelIdentifier, "Book", sizeof("Book")-1)) {
+        if (strncmp(deviceInfo.modelIdentifier, "MacBookPro14", sizeof("MacBookPro14")-1) == 0 ||
+            strncmp(deviceInfo.modelIdentifier, "MacBookPro15", sizeof("MacBookPro15")-1) == 0 ||
+            strncmp(deviceInfo.modelIdentifier, "MacBookPro16", sizeof("MacBookPro16")-1) == 0 ||
+            strncmp(deviceInfo.modelIdentifier, "MacBookAir8", sizeof("MacBookAir8")-1) == 0 ||
+            strncmp(deviceInfo.modelIdentifier, "MacBookPro9", sizeof("MacBookPro9")-1) == 0) {
+            if (lg_wmbb(WMBB_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
+                DBGLOG("batt", "Failed to %s battery conservative mode(WMBB)", state ? "enable" : "disable");
+            } else {
+                DBGLOG("batt", "Battery conservative mode is %s(WMBB)", state ? "enabled" : "disabled");
+                setProperty("BatteryConservativeMode", state);
+            }
+        } else {
+            if (lg_wmab(WM_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
+                DBGLOG("batt", "Failed to %s battery conservative mode(WMAB)", state ? "enable" : "disable");
+            } else {
+                DBGLOG("batt", "Battery conservative mode(WMAB) is %s", state ? "enabled" : "disabled");
+                setProperty("BatteryConservativeMode", state);
+            }
+        }
     } else {
-        DBGLOG("batt", "Battery conservative mode is %s", state ? "enabled" : "disabled");
-        setProperty("BatteryConservativeMode", state);
+        DBGLOG("batt", "Skipped BatteryConservativeMode");
     }
 }
 

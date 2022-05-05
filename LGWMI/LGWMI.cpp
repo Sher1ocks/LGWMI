@@ -114,7 +114,7 @@ void LGWMI::setBatteryConservativeMode(bool state) {
             strncmp(deviceInfo.modelIdentifier, "MacBookPro15", sizeof("MacBookPro15")-1) == 0 ||
             strncmp(deviceInfo.modelIdentifier, "MacBookPro16", sizeof("MacBookPro16")-1) == 0 ||
             strncmp(deviceInfo.modelIdentifier, "MacBookAir8", sizeof("MacBookAir8")-1) == 0 ||
-            strncmp(deviceInfo.modelIdentifier, "MacBookPro9", sizeof("MacBookPro9")-1) == 0) {
+            strncmp(deviceInfo.modelIdentifier, "MacBookAir9", sizeof("MacBookAir9")-1) == 0) {
             if (lg_wmbb(WMBB_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
                 DBGLOG("batt", "Failed to %s battery conservative mode(WMBB)", state ? "enable" : "disable");
             } else {

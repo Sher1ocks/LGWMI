@@ -101,20 +101,22 @@ int LGWMI::lg_wmbb(uint32_t method_id, uint32_t arg1, uint32_t arg2) {
     return val;
 }
 
-// Since the LG Gram 2019 and later models can control the maximum battery charge using WMBB,
-// you must use smbios on MacBook Pro 14,x, MacBook Air 8,x or later.
+// Since the LG gram 2019 and later models can control the maximum battery charge using WMBB,
 // REF : https://github.com/torvalds/linux/blob/master/drivers/platform/x86/lg-laptop.c
 void LGWMI::setBatteryConservativeMode(bool state) {
     auto deviceInfo = BaseDeviceInfo::get();
-    
+    auto gen = BaseDeviceInfo::get().cpuGeneration;
+
     DBGLOG("batt", "Detected %s model", deviceInfo.modelIdentifier);
     
     if (strstr(deviceInfo.modelIdentifier, "Book", sizeof("Book")-1)) {
-        if (strncmp(deviceInfo.modelIdentifier, "MacBookPro14", sizeof("MacBookPro14")-1) == 0 ||
-            strncmp(deviceInfo.modelIdentifier, "MacBookPro15", sizeof("MacBookPro15")-1) == 0 ||
-            strncmp(deviceInfo.modelIdentifier, "MacBookPro16", sizeof("MacBookPro16")-1) == 0 ||
-            strncmp(deviceInfo.modelIdentifier, "MacBookAir8", sizeof("MacBookAir8")-1) == 0 ||
-            strncmp(deviceInfo.modelIdentifier, "MacBookAir9", sizeof("MacBookAir9")-1) == 0) {
+        if ((gen == CPUInfo::CpuGeneration::CoffeeLake) || // 2019: Stepping b, c
+            (gen == CPUInfo::CpuGeneration::CannonLake) ||
+            (gen == CPUInfo::CpuGeneration::IceLake) ||
+            (gen == CPUInfo::CpuGeneration::CometLake) ||
+            (gen == CPUInfo::CpuGeneration::RocketLake) ||
+            (gen == CPUInfo::CpuGeneration::TigerLake) ||
+            (gen == CPUInfo::CpuGeneration::AlderLake)) {
             if (lg_wmbb(WMBB_BATT_LIMIT, WM_SET, state ? 80 : 100) != 0) {
                 DBGLOG("batt", "Failed to %s battery conservative mode(WMBB)", state ? "enable" : "disable");
             } else {
